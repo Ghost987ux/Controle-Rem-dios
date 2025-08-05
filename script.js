@@ -20,12 +20,7 @@ const setores = [
   "EMPACOTAMENTO - 3º TURNO","MANUTENÇÃO ELETRICA","LIMPEZA FÁBRIL","REFEITÓRIO"
 ];
 
-// RELATÓRIO PADRÃO no mês anterior ao atual
-const relPadrao = {
-  // Mês anterior dinâmico
-  // Por exemplo, se hoje é 2025-08, relPadraoMes = '2025-07'
-};
-
+// Função para pegar mês anterior no formato 'YYYY-MM'
 function getMesAnterior() {
   const hoje = new Date();
   let ano = hoje.getFullYear();
@@ -111,21 +106,40 @@ const relPadraoCompleto = {
 let meds;
 let rel = {};
 
-// Função para zerar e aplicar relatório padrão com saídas já lançadas no estoque
+// Mapeamento para agrupar setores por setor geral
+const setorGeralMap = {
+  "ENSAQUE - 1° TURNO": "ENSAQUE",
+  "ENSAQUE - 2° TURNO": "ENSAQUE",
+  "ENSAQUE - 3° TURNO": "ENSAQUE",
+  "CARREGAMENTO 1° TURNO": "CARREGAMENTO",
+  "CARREGAMENTO 2° TURNO": "CARREGAMENTO",
+  "EMPACOTAMENTO - 1° TURNO": "EMPACOTAMENTO",
+  "EMPACOTAMENTO - 2° TURNO": "EMPACOTAMENTO",
+  "EMPACOTAMENTO - 3° TURNO": "EMPACOTAMENTO",
+  "ADM FABRIL": "ADM FABRIL",
+  "TORRE": "TORRE",
+  "MANUTENÇÃO": "MANUTENÇÃO",
+  "MOEGA": "MOEGA",
+  "ALMOXARIFADO": "ALMOXARIFADO",
+  "ESTOQUE": "ESTOQUE",
+  "SILO BOLSA": "SILO BOLSA",
+  "GOIÂNIA": "GOIÂNIA",
+  "LIMPEZA FÁBRIL": "LIMPEZA FÁBRIL",
+  "REFEITÓRIO": "REFEITÓRIO",
+  "MANUTENÇÃO ELETRICA": "MANUTENÇÃO ELETRICA"
+};
+
+// Função para zerar e carregar relatório padrão no estoque
 function carregarPadraoComRelatorio(){
   meds = inicial.map(m => {
-    // Para cada remédio, somar as saídas presentes em relPadrao
     let totalSaidas = 0;
-
-    const meses = Object.keys(relPadraoCompleto);
-    meses.forEach(mes => {
+    Object.keys(relPadraoCompleto).forEach(mes => {
       const setoresMes = relPadraoCompleto[mes];
       Object.keys(setoresMes).forEach(setor => {
         const medsSetor = setoresMes[setor];
         if(medsSetor[m.nome]) totalSaidas += medsSetor[m.nome];
       });
     });
-
     return {
       nome: m.nome,
       estoqueInicial: m.estoqueInicial,
@@ -135,10 +149,10 @@ function carregarPadraoComRelatorio(){
   });
 
   rel = JSON.parse(JSON.stringify(relPadraoCompleto));
-
   save();
   renderEstoque();
   renderRelatorio();
+  renderGrafico();
 }
 
 // Carregar dados do localStorage ou padrão
@@ -152,8 +166,7 @@ if(!storageMeds || !storageRel){
   rel = storageRel;
 }
 
-// Resto do código igual...
-
+// Helpers
 const $ = sel => document.querySelector(sel);
 const est = m => m.estoqueInicial + m.entradas - m.saidas;
 
@@ -196,7 +209,7 @@ function renderRelatorio(){
   const tb = $("#relatorio-table");
   tb.innerHTML = "";
 
-  const meses = Object.keys(rel).sort().reverse(); // mais recente primeiro
+  const meses = Object.keys(rel).sort().reverse();
 
   if(meses.length === 0){
     tb.innerHTML = "<tr><td colspan='4'>— Nenhuma saída registrada —</td></tr>";
@@ -230,7 +243,7 @@ window.lancar = i => {
   if (!qtd) return alert("Informe a quantidade.");
 
   const m = meds[i];
-  const mesAtual = new Date().toISOString().slice(0,7); // "YYYY-MM"
+  const mesAtual = new Date().toISOString().slice(0,7);
 
   if (qtd > 0) {
     m.entradas += qtd;
@@ -252,6 +265,7 @@ window.lancar = i => {
   save();
   renderEstoque();
   renderRelatorio();
+  renderGrafico();
 };
 
 window.corrigir = i => {
@@ -264,6 +278,7 @@ window.corrigir = i => {
   save();
   renderEstoque();
   renderRelatorio();
+  renderGrafico();
 };
 
 $("#reset").onclick = () => {
@@ -287,24 +302,108 @@ $("#tab-relatorio").onclick = () => {
   renderRelatorio();
 };
 
+$("#tab-grafico").onclick = () => {
+  $("#tab-grafico").classList.add("active");
+  $("#tab-estoque").classList.remove("active");
+  $("#tab-relatorio").classList.remove("active");
+  $("#estoque-content").style.display = "none";
+  $("#relatorio-content").style.display = "none";
+  $("#grafico-content").style.display = "block";
+  renderGrafico();
+};
+
 $("#btn-entrar").onclick = () => {
   $("#login-screen").style.display = "none";
   $("#app-screen").style.display = "block";
   save();
   renderEstoque();
   renderRelatorio();
+  renderGrafico();
 };
 
-// Inicializa data de última atualização na abertura do app
 window.onload = () => {
   const lu = localStorage.getItem("lastUpdate");
   if(lu) $("#last-update").textContent = "Última atualização: " + new Date(lu).toLocaleString("pt-BR");
-  
-  // Inicializa partículas na tela login
   initParticles();
 };
 
-// Função de partículas leve para login (caso tenha no seu HTML)
+// Gráfico com Chart.js
+let chartInstance = null;
+
+function renderGrafico(){
+  const ctx = document.getElementById("graficoEstoque").getContext("2d");
+
+  const meses = Object.keys(rel).sort();
+
+  let setoresPresentes = new Set();
+  meses.forEach(mes => {
+    Object.keys(rel[mes]).forEach(setor => {
+      const setorGeral = setorGeralMap[setor] || setor;
+      setoresPresentes.add(setorGeral);
+    });
+  });
+  setoresPresentes = [...setoresPresentes].sort();
+
+  const datasets = setoresPresentes.map((setorGeral, i) => {
+    return {
+      label: setorGeral,
+      data: meses.map(mes => {
+        const dadosMes = rel[mes];
+        let soma = 0;
+        Object.keys(dadosMes).forEach(setor => {
+          if((setorGeralMap[setor] || setor) === setorGeral){
+            const medsSetor = dadosMes[setor];
+            Object.values(medsSetor).forEach(qtd => soma += qtd);
+          }
+        });
+        return soma;
+      }),
+      backgroundColor: `hsl(${(i * 60) % 360}, 70%, 50%)`,
+      borderWidth: 1
+    };
+  });
+
+  if(chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: meses,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 15,
+            padding: 15,
+            font: { size: 14, weight: 'bold' }
+          }
+        },
+        title: {
+          display: true,
+          text: 'Saídas Mensais por Setor Geral',
+          font: { size: 18, weight: 'bold' }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 },
+          title: { display: true, text: 'Quantidade de Saídas' }
+        },
+        x: {
+          title: { display: true, text: 'Meses (YYYY-MM)' }
+        }
+      }
+    }
+  });
+}
+
+// Partículas para a tela de login
 function initParticles(){
   const canvas = document.getElementById("particles-canvas");
   if(!canvas) return;
@@ -358,7 +457,6 @@ function initParticles(){
       p.draw();
     });
 
-    // linhas entre particulas próximas
     for(let i=0;i<maxParticles;i++){
       for(let j=i+1;j<maxParticles;j++){
         const p1 = particles[i];
