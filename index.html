@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle de Medicamentos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Tela de Login com canvas para partículas -->
+  <div id="login-screen">
+    <canvas id="particles-canvas"></canvas>
+    <div class="login-content">
+      <h1>Bem Vindo</h1>
+      <button id="btn-entrar">Entrar</button>
+    </div>
+  </div>
+
+  <!-- Tela principal -->
+  <div id="app-screen" style="display:none;">
+    <header>
+      <h1>Bem Vindo Matheus</h1>
+      <p id="last-update">Última atualização: —</p>
+    </header>
+
+    <nav>
+      <button id="tab-estoque" class="active">Estoque</button>
+      <button id="tab-relatorio">Relatório</button>
+      <button id="reset">Resetar</button>
+    </nav>
+
+    <section id="estoque-content">
+      <table>
+        <thead>
+          <tr>
+            <th>Medicamento</th>
+            <th>Inicial</th>
+            <th>Entradas</th>
+            <th>Saídas</th>
+            <th>Estoque</th>
+            <th>Setor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="meds-table"></tbody>
+      </table>
+    </section>
+
+    <section id="relatorio-content" style="display:none;">
+      <h2>Relatório por Mês</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Mês</th>
+            <th>Setor</th>
+            <th>Medicamento</th>
+            <th>Quantidade</th>
+          </tr>
+        </thead>
+        <tbody id="relatorio-table"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
