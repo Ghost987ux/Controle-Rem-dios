@@ -1,0 +1,118 @@
+/* Geral */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f4f4f4;
+}
+
+/* Tela login */
+#login-screen {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #0d1b2a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#particles-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+
+.login-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: white;
+  padding: 40px 60px;
+  background: rgba(13, 27, 42, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+}
+
+.login-content h1 {
+  font-weight: 700;
+  font-size: 3rem;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+}
+
+#btn-entrar {
+  font-size: 1.5rem;
+  padding: 15px 60px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background: #00aaff;
+  color: white;
+  box-shadow: 0 6px 15px rgba(0,170,255,0.5);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+#btn-entrar:hover {
+  background: #008fcc;
+  box-shadow: 0 8px 20px rgba(0,140,204,0.8);
+}
+
+/* Header e navegação */
+header {
+  background: #343a40;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  background: #ddd;
+  padding: 10px;
+}
+
+nav button {
+  margin: 0 10px;
+  padding: 8px 15px;
+  border: none;
+  background: #bbb;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+nav button.active {
+  background: #666;
+  color: white;
+}
+
+nav button:hover:not(.active) {
+  background: #999;
+}
+
+/* Tabelas */
+table {
+  width: 95%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+
+.low {
+  background: #ffdddd;
+}
